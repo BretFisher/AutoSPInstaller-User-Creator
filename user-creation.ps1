@@ -1,38 +1,48 @@
 # created by Bret Fisher - bret@fishbrains.com
 
-# meant to 
-#SEARCH AND REPLACE:
-     #MYUSER_ with service account prefix
-     #DOMAIN with AD domain
-     #"password" with service account password
-     #OU=Service Accounts with OU accounts belong in
+#
+# Edit these to your liking
+#
 
-#SearchContentAccess has been changed to ContentAccess to fit
-#SP_CacheSuperReader has been changed to SP_CacheSuperRdr
-
-# I recommend keeping the prefix blank if this is your first farm in the domain
-# you can add a prefix to allow for multiple farm deployments using different accounts
-# but you'll then need to update the AutoSPInstallerInput.xml
-$prefix = ""
-
-$domain = ""
-
-$UserPath = "OU=SharePoint Services,DC=DOMAIN,DC=COM"
+# I recommend keeping the prefix SP if this is your first/only farm in the domain
+# you should change the prefix to allow for multiple farm deployments using different accounts
+$prefix = "SP" #max three characters to fit SamAccountName
+$domain = "demo.local"
+# where to put accounts in AD. Create the OU before this script runs
+$userPath = "OU=SharePoint Services,DC=demo,DC=local"
+# passwords. I typically make them random 16 char, except installer I make easier to type :)
+$installerPass = ""
+$farmAdminPass = ""
+$servicePass = ""
+$websitePass = ""
+$mysitePass = ""
+$cacheSuprUsrPass = ""
+$cacheSuprReadrPass = ""
+$UPSyncPass = ""
+$searchPass = ""
+$contentAccessPass = ""
 
 
 # ======================
-# You should need to edit these lines, but you may want to uncomment the ones for SQL and ADFS
+# no need to edit these
 Import-Module ActiveDirectory
-New-ADUser -SamAccountName MYUSER_SPinstall -Name "MYUSER_SPinstall" -UserPrincipalName "MYUSER_SPinstall@DOMAIN.com" -Description "SP installer account" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_SPfarm -Name "MYUSER_SPfarm" -UserPrincipalName "MYUSER_SPfarm@DOMAIN.com" -Description "SP Farm" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_SPservice -Name "MYUSER_SPservice" -UserPrincipalName "MYUSER_SPservice@DOMAIN.com" -Description "SP Services" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_portalacc -Name "MYUSER_portalacc" -UserPrincipalName "MYUSER_portalacc@DOMAIN.com" -Description "SP Content Svc" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_mysitesacc -Name "MYUSER_mysitesacc" -UserPrincipalName "MYUSER_mysitesacc@DOMAIN.com" -Description "SP mysites" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_SP_CacheSuperUser -Name "MYUSER_SP_CacheSuperUser" -UserPrincipalName "MYUSER_SP_CacheSuperUser@DOMAIN.com" -Description "SP cache Super User" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_SP_CacheSuperRdr -Name "MYUSER_SP_CacheSuperRdr" -UserPrincipalName "MYUSER_SP_CacheSuperRdr@DOMAIN.com" -Description "SP cache Super Reader" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_UPSync -Name "MYUSER_UPSync" -UserPrincipalName "MYUSER_UPSync@DOMAIN.com" -Description "SP User Prof Sync" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_SPsearch -Name "MYUSER_SPsearch" -UserPrincipalName "MYUSER_SPsearch@DOMAIN.com" -Description "SP search" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_ContentAccess -Name "MYUSER_ContentAccess" -UserPrincipalName "MYUSER_ContentAccess@DOMAIN.com" -Description "SP search Content Access" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_ExcelUser -Name "MYUSER_ExcelUser" -UserPrincipalName "MYUSER_ExcelUser@DOMAIN.com" -Description "SP Excel Service" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_VisioUser -Name "MYUSER_VisioUser" -UserPrincipalName "MYUSER_VisioUser@DOMAIN.com" -Description "SP Visio Service" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
-New-ADUser -SamAccountName MYUSER_PerfPointUser -Name "MYUSER_PerfPointUser" -UserPrincipalName "MYUSER_PerfPointUser@DOMAIN.com" -Description "SP PerformancePoint Service" -AccountPassword (ConvertTo-SecureString -AsPlainText "password" -Force) -Enabled $true -PasswordNeverExpires $true -Path $UserPath
+# for logging in and installing/patching sharepoint
+New-ADUser -SamAccountName $prefix"installer" -Name $prefix"installer" -UserPrincipalName $prefix"installer@"$domain -Description "SP Installer Account" -AccountPassword (ConvertTo-SecureString -AsPlainText $installerPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# aka database access account.  Needs SQL dbcreator and securityadmin
+New-ADUser -SamAccountName $prefix"farmAdmin" -Name $prefix"farmAdmin" -UserPrincipalName $prefix"farmAdmin@"$domain -Description "SP Farm" -AccountPassword (ConvertTo-SecureString -AsPlainText $farmAdminPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# used for all managed service apps, some say to seperate these out, but I prefer to go for RAM savings and performance by using same
+New-ADUser -SamAccountName $prefix"service" -Name $prefix"service" -UserPrincipalName $prefix"service@"$domain -Description "SP Services" -AccountPassword (ConvertTo-SecureString -AsPlainText $servicePass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# used for web applications, portal, extranet, intranet, public, etc
+New-ADUser -SamAccountName $prefix"website" -Name $prefix"website" -UserPrincipalName $prefix"website@"$domain -Description "SP Content Svc" -AccountPassword (ConvertTo-SecureString -AsPlainText $websitePass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# just for mysites web applications
+New-ADUser -SamAccountName $prefix"mysite" -Name $prefix"mysite" -UserPrincipalName $prefix"mysite@"$domain -Description "SP mysites" -AccountPassword (ConvertTo-SecureString -AsPlainText $mysitePass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# speed up sharepoint
+New-ADUser -SamAccountName $prefix"cacheSuprUsr" -Name $prefix"cacheSuprUsr" -UserPrincipalName $prefix"cacheSuprUsr@"$domain -Description "SP Cache Super User" -AccountPassword (ConvertTo-SecureString -AsPlainText $cacheSuprUsrPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# speed up sharepoint
+New-ADUser -SamAccountName $prefix"cacheSuprRdr "-Name $prefix"cacheSuprRdr" -UserPrincipalName $prefix"cacheSuprRdr@"$domain -Description "SP Cache Super Reader" -AccountPassword (ConvertTo-SecureString -AsPlainText $cacheSuprReadrPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# user profile sync service
+New-ADUser -SamAccountName $prefix"UPSync" -Name $prefix"UPSync" -UserPrincipalName $prefix"UPSync@"$domain -Description "SP User Profile Sync" -AccountPassword (ConvertTo-SecureString -AsPlainText $UPSyncPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# search service
+New-ADUser -SamAccountName $prefix"search" -Name $prefix"search" -UserPrincipalName $prefix"search@"$domain -Description "SP search" -AccountPassword (ConvertTo-SecureString -AsPlainText $searchPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
+# account that is default for accesing non sharepoint content like file servers
+New-ADUser -SamAccountName $prefix"contentAccess" -Name $prefix"contentAccess" -UserPrincipalName $prefix"contentAccess@"$domain -Description "SP Search Content Access" -AccountPassword (ConvertTo-SecureString -AsPlainText $contentAccessPass -Force) -Enabled $true -PasswordNeverExpires $true -Path $userPath
